@@ -101,7 +101,12 @@ class EvolutionaryAlgorithm:
                 p1_genes[crossover_point2:]
         )
         return Chromosome(offspring_genes)
+    
+    #TODO
+    def cross_seeded(self, parent1, parent2):
+        pass
 
+    #TODO
     def cross_uniform(self, parent1, parent2):
         pass
 
@@ -117,11 +122,18 @@ class EvolutionaryAlgorithm:
                     self.boundary_mutation(offspring)
         return offspring
 
+    #TODO
     def single_point_mutation(self, offspring):
         pass
 
+    #TODO
     def two_point_mutation(self, offspring):
         pass
 
+        #TODO
     def boundary_mutation(self, offspring):
         pass
+
+    # TODO INVERSION
+
+    # TODO ELITE
