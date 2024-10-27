@@ -109,19 +109,19 @@ class EvolutionaryAlgorithm:
     def mutate(self, offspring):
         for idx in range(offspring.shape[0]):
             if np.random.rand() < self.p_mutation:
-                if self.mutation_method == 'point':
-                    self.point_mutation(offspring)
-                elif self.mutation_method == 'bit':
-                    self.bit_mutation(offspring)
-                elif self.mutation_method == 'inverse':
-                    self.inverse_mutation(offspring)
+                if self.mutation_method == 'single':
+                    self.single_point_mutation(offspring)
+                elif self.mutation_method == 'double':
+                    self.two_point_mutation(offspring)
+                elif self.mutation_method == 'boundary':
+                    self.boundary_mutation(offspring)
         return offspring
 
-    def point_mutation(self, offspring):
+    def single_point_mutation(self, offspring):
         pass
 
-    def bit_mutation(self, offspring):
+    def two_point_mutation(self, offspring):
         pass
 
-    def inverse_mutation(self, offspring):
+    def boundary_mutation(self, offspring):
         pass
