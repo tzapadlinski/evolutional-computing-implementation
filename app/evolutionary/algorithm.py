@@ -15,7 +15,11 @@ class EvolutionaryAlgorithm:
                  mutation_method,
                  crossover_method,
                  function,
-                 optimization_mode
+                 optimization_mode,
+                 p_uniform,
+                 lower_bound,
+                 upper_bound,
+                 p_inversion
                  ):
         self.chromosome_size = chromosome_size
         self.population = [Chromosome(chromosome_size) for _ in range(population_size)]
@@ -27,6 +31,11 @@ class EvolutionaryAlgorithm:
         self.crossover_method = crossover_method
         self.function = function
         self.optimization_mode = optimization_mode
+        self.p_uniform = p_uniform
+        self.lower_bound = lower_bound
+        self.upper_bound = upper_bound
+        self.p_inversion = p_inversion
+
 
     def run(self):
         # TODO plotting
@@ -34,22 +43,31 @@ class EvolutionaryAlgorithm:
         for generation in range(self.generations):
             parents = self.select_parents()
             offspring = self.crossover(parents)
-            population = self.mutate(offspring)
+            offspring = self.mutate(offspring)
+            offspring = self.inverse(offspring)
+
         # TODO rest...
 
     # SELECTION
     def select_parents(self):
         if self.selection_method == 'roulette':
-            fitness_scores = np.array([self.function.fit(chromosome) for chromosome in self.population])
+            fitness_scores = np.array(
+                [self.function.fit(chromosome.get_value(self.lower_bound, self.upper_bound)) for chromosome in
+                 self.population])
 
             if self.optimization_mode == 'max':
+                min_fitness = np.min(fitness_scores)
+                fitness_scores += abs(min_fitness)
                 probabilities = fitness_scores / np.sum(fitness_scores)
-            else:  # TODO add solution for values < 0
+            else:
+                min_fitness = np.min(fitness_scores)
+                fitness_scores += abs(min_fitness)
                 fitness_scores = np.where(fitness_scores == 0, np.float64(1e-10), fitness_scores)
                 inverse_scores = 1 / fitness_scores
                 probabilities = inverse_scores / np.sum(inverse_scores)
 
-            return self.population[np.random.choice(len(self.population), size=len(self.population), p=probabilities)]
+            selected_indices = np.random.choice(len(self.population), size=len(self.population), p=probabilities)
+            return [self.population[i] for i in selected_indices]
 
         elif self.selection_method == 'tournament':
             selected_parents = []
@@ -61,7 +79,7 @@ class EvolutionaryAlgorithm:
 
         elif self.selection_method == 'best':
             return self.population[
-                np.argsort([self.function.fit(chromosome.getValue()) for chromosome in self.population])[
+                np.argsort([self.function.fit(chromosome.get_value(self.lower_bound, self.upper_bound)) for chromosome in self.population])[
                 -len(self.population) // 2:]]
 
     # CROSSOVER
@@ -77,18 +95,18 @@ class EvolutionaryAlgorithm:
                     offspring.append(self.cross_double(parent1, parent2))
                 elif self.crossover_method == 'uniform':
                     offspring.append(self.cross_uniform(parent1, parent2))
-        return offspring
+        return np.array(offspring)
 
     def cross_single(self, parent1: Chromosome, parent2: Chromosome):
-        crossover_point = np.random.randint(1, self.function.num_vars)
+        crossover_point = np.random.randint(1, self.chromosome_size)
         p1_genes = parent1.genes
         p2_genes = parent2.genes
         offspring_genes = p1_genes[:crossover_point] + p2_genes[crossover_point:]
         return Chromosome(genes=offspring_genes)
 
     def cross_double(self, parent1, parent2):
-        crossover_point1 = np.random.randint(1, self.function.num_vars)
-        crossover_point2 = np.random.randint(1, self.function.num_vars)
+        crossover_point1 = np.random.randint(1, self.chromosome_size)
+        crossover_point2 = np.random.randint(1, self.chromosome_size)
         if crossover_point1 > crossover_point2:
             crossover_point1, crossover_point2 = crossover_point2, crossover_point1
 
@@ -100,18 +118,24 @@ class EvolutionaryAlgorithm:
                 p2_genes[crossover_point1:crossover_point2] +
                 p1_genes[crossover_point2:]
         )
-        return Chromosome(offspring_genes)
-    
+        return Chromosome(genes=offspring_genes)
+
     #TODO
     def cross_seeded(self, parent1, parent2):
         pass
 
-    #TODO
     def cross_uniform(self, parent1, parent2):
+        offspring_genes = [
+            parent1.genes[i] if np.random.rand() < self.p_uniform else parent2.genes[i]
+            for i in range(self.chromosome_size)
+        ]
+        return Chromosome(genes=offspring_genes)
+
+    def cross_seeded(self, parent1, parent2):
         pass
 
     # MUTATION
-    def mutate(self, offspring):
+    def mutate(self, offspring: np.ndarray):
         for idx in range(offspring.shape[0]):
             if np.random.rand() < self.p_mutation:
                 if self.mutation_method == 'single':
@@ -134,6 +158,13 @@ class EvolutionaryAlgorithm:
     def boundary_mutation(self, offspring):
         pass
 
-    # TODO INVERSION
-
     # TODO ELITE
+
+    # INVERSION
+    def inverse(self, offspring: np.ndarray):
+        for chromosome in offspring:
+            if np.random.rand() < self.p_inversion:
+                start = np.random.randint(0, self.chromosome_size)
+                end = np.random.randint(start, self.chromosome_size)
+                chromosome.genes[start:end] = reversed(chromosome.genes[start:end])
+        return offspring
