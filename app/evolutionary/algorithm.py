@@ -148,16 +148,25 @@ class EvolutionaryAlgorithm:
 
     #TODO
     def single_point_mutation(self, offspring):
-        pass
+        for chromosome in offspring:
+            mutation_point = np.random.randint(0, self.chromosome_size)
+            chromosome.genes[mutation_point] = 1 - chromosome.genes[mutation_point]
 
     #TODO
     def two_point_mutation(self, offspring):
-        pass
+        for chromosome in offspring:
+            point1 = np.random.randint(0, self.chromosome_size)
+            point2 = np.random.randint(0, self.chromosome_size)
+            if point1 > point2:
+                point1, point2 = point2, point1
+            for i in range(point1, point2 + 1):
+                chromosome.genes[i] = 1 - chromosome.genes[i]
 
-        #TODO
+    #TODO
     def boundary_mutation(self, offspring):
-        pass
-
+        for chromosome in offspring:
+            boundary_point = np.random.choice([0, self.chromosome_size - 1])
+            chromosome.genes[boundary_point] = 1 - chromosome.genes[boundary_point]
     # TODO ELITE
 
     # INVERSION
