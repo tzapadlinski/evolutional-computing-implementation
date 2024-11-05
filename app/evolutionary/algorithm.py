@@ -61,7 +61,6 @@ class EvolutionaryAlgorithm:
         return [self.population[i] for i in elite_indices]
 
     def update_population(self, elite_individuals, offspring):
-        # Combine elite individuals with the new offspring
         new_population = list(elite_individuals) + list(offspring[:len(self.population) - len(elite_individuals)])
         return np.array(new_population)
 
