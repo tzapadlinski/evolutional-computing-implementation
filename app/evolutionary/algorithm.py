@@ -19,7 +19,8 @@ class EvolutionaryAlgorithm:
                  p_uniform,
                  lower_bound,
                  upper_bound,
-                 p_inversion
+                 p_inversion,
+                 elite_percentage=0.1
                  ):
         self.chromosome_size = chromosome_size
         self.population = [Chromosome(chromosome_size) for _ in range(population_size)]
@@ -35,18 +36,34 @@ class EvolutionaryAlgorithm:
         self.lower_bound = lower_bound
         self.upper_bound = upper_bound
         self.p_inversion = p_inversion
+        self.elite_percentage = elite_percentage
 
 
     def run(self):
         # TODO plotting
 
         for generation in range(self.generations):
+            elite_individuals = self.select_elite()
             parents = self.select_parents()
             offspring = self.crossover(parents)
             offspring = self.mutate(offspring)
             offspring = self.inverse(offspring)
+            self.population = self.update_population(elite_individuals, offspring)
 
         # TODO rest...
+
+    # ELITE
+    def select_elite(self):
+        num_elite = int(self.elite_percentage * len(self.population))
+
+        fitness_scores = np.array([self.function.fit(chromosome.get_value(self.lower_bound, self.upper_bound)) for chromosome in self.population])
+        elite_indices = np.argsort(fitness_scores)[-num_elite:] if self.optimization_mode == 'max' else np.argsort(fitness_scores)[:num_elite]
+        return [self.population[i] for i in elite_indices]
+
+    def update_population(self, elite_individuals, offspring):
+        # Combine elite individuals with the new offspring
+        new_population = list(elite_individuals) + list(offspring[:len(self.population) - len(elite_individuals)])
+        return np.array(new_population)
 
     # SELECTION
     def select_parents(self):
@@ -146,13 +163,11 @@ class EvolutionaryAlgorithm:
                     self.boundary_mutation(offspring)
         return offspring
 
-    #TODO
     def single_point_mutation(self, offspring):
         for chromosome in offspring:
             mutation_point = np.random.randint(0, self.chromosome_size)
             chromosome.genes[mutation_point] = 1 - chromosome.genes[mutation_point]
 
-    #TODO
     def two_point_mutation(self, offspring):
         for chromosome in offspring:
             point1 = np.random.randint(0, self.chromosome_size)
@@ -162,12 +177,10 @@ class EvolutionaryAlgorithm:
             for i in range(point1, point2 + 1):
                 chromosome.genes[i] = 1 - chromosome.genes[i]
 
-    #TODO
     def boundary_mutation(self, offspring):
         for chromosome in offspring:
             boundary_point = np.random.choice([0, self.chromosome_size - 1])
             chromosome.genes[boundary_point] = 1 - chromosome.genes[boundary_point]
-    # TODO ELITE
 
     # INVERSION
     def inverse(self, offspring: np.ndarray):
