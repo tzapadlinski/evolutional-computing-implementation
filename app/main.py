@@ -1,14 +1,7 @@
-population_size = 100
-num_vars = 5
-generations = 20
-p_mutation = 0.1
-p_crossover = 0.8
-selection_method = 'roulette'
-mutation_method = 'point'
-crossover_method = 'single'
+import tkinter as tk
+from gui.gui import GeneticAlgorithmGUI
 
-
-best_solution, best_fitness = genetic_algorithm(population_size, num_vars, generations, p_mutation)
-
-print("lepsze rozwiązanie:", best_solution)
-print("Najlepsza wartość funkcji:", best_fitness)
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = GeneticAlgorithmGUI(root)
+    root.mainloop()
