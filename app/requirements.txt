@@ -1,0 +1,7 @@
+# packages needed to run app
+# GUI
+tkinter
+
+# packages with functions
+benchmark_functions
+opfunu
