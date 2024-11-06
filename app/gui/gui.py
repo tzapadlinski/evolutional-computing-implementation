@@ -139,7 +139,7 @@ class GeneticAlgorithmGUI:
                 mutation_method = mutation_method,
                 crossover_method = cross_method,
                 function = function,
-                optimization_mode = optimiziation_mode,
+                optimization_mode = optimization_mode,
                 p_uniform = uniform_crossover,
                 lower_bound = begin_range,
                 upper_bound = end_range,
