@@ -1,6 +1,6 @@
 import numpy as np
 
-from app.evolutionary.chromosome import Chromosome
+from .chromosome import Chromosome
 
 
 class EvolutionaryAlgorithm:

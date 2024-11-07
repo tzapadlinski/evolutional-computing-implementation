@@ -14,10 +14,10 @@ class Chromosome:
         x = lower_bound + decimal_value * (upper_bound - lower_bound) / (2 ** n - 1)
         return x
 
-# Test
-a = -10
-b = 10
-bit_array = [0,0,0,0,1,1,0,0,1,0,0,1,0,0,1,0,0,1,0,1,1,0,1,0]
-chromosome = Chromosome(genes=bit_array)
-value = chromosome.get_value(a, b)
-print(f"Chromosome: {chromosome.genes}, Value: {value}")
+# # Test
+# a = -10
+# b = 10
+# bit_array = [0,0,0,0,1,1,0,0,1,0,0,1,0,0,1,0,0,1,0,1,1,0,1,0]
+# chromosome = Chromosome(genes=bit_array)
+# value = chromosome.get_value(a, b)
+# print(f"Chromosome: {chromosome.genes}, Value: {value}")
