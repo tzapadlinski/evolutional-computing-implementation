@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 
 from .chromosome import Chromosome
 from .function import Function
@@ -43,7 +44,7 @@ class EvolutionaryAlgorithm:
         self.elite_percentage = elite_percentage
 
     def run(self):
-        # TODO plotting
+        best_fitness_per_generation = []
 
         for generation in range(self.generations):
             elite_individuals = self.select_elite()
@@ -53,7 +54,18 @@ class EvolutionaryAlgorithm:
             offspring = self.inverse(offspring)
             self.population = self.update_population(elite_individuals, offspring)
 
-        # TODO rest...
+            # Calculate the best fitness in the current generation
+            fitness_scores = [self.function.fit(chromosome.get_value(self.lower_bound, self.upper_bound)) for chromosome
+                              in self.population]
+            best_fitness = max(fitness_scores) if self.optimization_mode == 'max' else min(fitness_scores)
+            best_fitness_per_generation.append(best_fitness)
+
+        # Plotting the best fitness per generation
+        plt.plot(best_fitness_per_generation)
+        plt.xlabel('Generation')
+        plt.ylabel('Best Fitness')
+        plt.title('Best Fitness per Generation')
+        plt.show()
 
     # ELITE
     def select_elite(self):
@@ -119,6 +131,8 @@ class EvolutionaryAlgorithm:
                     offspring.append(self.cross_double(parent1, parent2))
                 elif self.crossover_method == 'uniform':
                     offspring.append(self.cross_uniform(parent1, parent2))
+                elif self.crossover_method == 'seeded':
+                    offspring.append(self.cross_seeded(parent1, parent2))
         return np.array(offspring)
 
     def cross_single(self, parent1: Chromosome, parent2: Chromosome):
@@ -154,9 +168,6 @@ class EvolutionaryAlgorithm:
             for i in range(self.chromosome_size)
         ]
         return Chromosome(genes=offspring_genes, num_variables=self.num_variables)
-
-    def cross_seeded(self, parent1, parent2):
-        pass
 
     # MUTATION
     def mutate(self, offspring: np.ndarray):
