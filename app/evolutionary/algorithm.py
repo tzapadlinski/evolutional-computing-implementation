@@ -1,6 +1,7 @@
 import numpy as np
 
 from .chromosome import Chromosome
+from .function import Function
 
 
 class EvolutionaryAlgorithm:
@@ -14,16 +15,18 @@ class EvolutionaryAlgorithm:
                  selection_method,
                  mutation_method,
                  crossover_method,
-                 function,
+                 function: 'Function',
+                 num_variables,
                  optimization_mode,
                  p_uniform,
                  lower_bound,
                  upper_bound,
                  p_inversion,
-                 elite_percentage=0.1
+                 elite_percentage=0.1,
                  ):
-        self.chromosome_size = chromosome_size
-        self.population = [Chromosome(chromosome_size) for _ in range(population_size)]
+        self.chromosome_size = chromosome_size * num_variables
+        self.population = [Chromosome(chromosome_size=chromosome_size * num_variables, num_variables=num_variables) for
+                           _ in range(population_size)]
         self.generations = generations
         self.p_mutation = p_mutation
         self.p_crossover = p_crossover
@@ -31,13 +34,13 @@ class EvolutionaryAlgorithm:
         self.mutation_method = mutation_method
         self.crossover_method = crossover_method
         self.function = function
+        self.num_variables = num_variables
         self.optimization_mode = optimization_mode
         self.p_uniform = p_uniform
         self.lower_bound = lower_bound
         self.upper_bound = upper_bound
         self.p_inversion = p_inversion
         self.elite_percentage = elite_percentage
-
 
     def run(self):
         # TODO plotting
@@ -56,8 +59,11 @@ class EvolutionaryAlgorithm:
     def select_elite(self):
         num_elite = int(self.elite_percentage * len(self.population))
 
-        fitness_scores = np.array([self.function.fit(chromosome.get_value(self.lower_bound, self.upper_bound)) for chromosome in self.population])
-        elite_indices = np.argsort(fitness_scores)[-num_elite:] if self.optimization_mode == 'max' else np.argsort(fitness_scores)[:num_elite]
+        fitness_scores = np.array(
+            [self.function.fit(chromosome.get_value(self.lower_bound, self.upper_bound)) for chromosome in
+             self.population])
+        elite_indices = np.argsort(fitness_scores)[-num_elite:] if self.optimization_mode == 'max' else np.argsort(
+            fitness_scores)[:num_elite]
         return [self.population[i] for i in elite_indices]
 
     def update_population(self, elite_individuals, offspring):
@@ -95,7 +101,9 @@ class EvolutionaryAlgorithm:
 
         elif self.selection_method == 'best':
             return self.population[
-                np.argsort([self.function.fit(chromosome.get_value(self.lower_bound, self.upper_bound)) for chromosome in self.population])[
+                np.argsort(
+                    [self.function.fit(chromosome.get_value(self.lower_bound, self.upper_bound)) for chromosome in
+                     self.population])[
                 -len(self.population) // 2:]]
 
     # CROSSOVER
@@ -118,7 +126,7 @@ class EvolutionaryAlgorithm:
         p1_genes = parent1.genes
         p2_genes = parent2.genes
         offspring_genes = p1_genes[:crossover_point] + p2_genes[crossover_point:]
-        return Chromosome(genes=offspring_genes)
+        return Chromosome(genes=offspring_genes, num_variables=self.num_variables)
 
     def cross_double(self, parent1, parent2):
         crossover_point1 = np.random.randint(1, self.chromosome_size)
@@ -134,9 +142,9 @@ class EvolutionaryAlgorithm:
                 p2_genes[crossover_point1:crossover_point2] +
                 p1_genes[crossover_point2:]
         )
-        return Chromosome(genes=offspring_genes)
+        return Chromosome(genes=offspring_genes, num_variables=self.num_variables)
 
-    #TODO
+    # TODO
     def cross_seeded(self, parent1, parent2):
         pass
 
@@ -145,7 +153,7 @@ class EvolutionaryAlgorithm:
             parent1.genes[i] if np.random.rand() < self.p_uniform else parent2.genes[i]
             for i in range(self.chromosome_size)
         ]
-        return Chromosome(genes=offspring_genes)
+        return Chromosome(genes=offspring_genes, num_variables=self.num_variables)
 
     def cross_seeded(self, parent1, parent2):
         pass
