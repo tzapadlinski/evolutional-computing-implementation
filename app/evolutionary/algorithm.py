@@ -54,13 +54,15 @@ class EvolutionaryAlgorithm:
             offspring = self.inverse(offspring)
             self.population = self.update_population(elite_individuals, offspring)
 
-            # Calculate the best fitness in the current generation
             fitness_scores = [self.function.fit(chromosome.get_value(self.lower_bound, self.upper_bound)) for chromosome
                               in self.population]
+            # TODO BETTER PLOTTING
+            #a) Wartości funkcji od kolejnej iteracji
+            #b) Średniej wartości funkcji, odchylenia standardowego od kolejnej iteracji
             best_fitness = max(fitness_scores) if self.optimization_mode == 'max' else min(fitness_scores)
             best_fitness_per_generation.append(best_fitness)
+            print(f'Generation {generation + 1}: Best Fitness: {best_fitness}')
 
-        # Plotting the best fitness per generation
         plt.plot(best_fitness_per_generation)
         plt.xlabel('Generation')
         plt.ylabel('Best Fitness')
@@ -84,11 +86,11 @@ class EvolutionaryAlgorithm:
 
     # SELECTION
     def select_parents(self):
-        if self.selection_method == 'roulette':
-            fitness_scores = np.array(
-                [self.function.fit(chromosome.get_value(self.lower_bound, self.upper_bound)) for chromosome in
-                 self.population])
+        fitness_scores = np.array(
+            [self.function.fit(chromosome.get_value(self.lower_bound, self.upper_bound)) for chromosome in
+             self.population])
 
+        if self.selection_method == 'roulette':
             if self.optimization_mode == 'max':
                 min_fitness = np.min(fitness_scores)
                 fitness_scores += abs(min_fitness)
@@ -106,25 +108,29 @@ class EvolutionaryAlgorithm:
         elif self.selection_method == 'tournament':
             selected_parents = []
             for _ in range(len(self.population)):
-                competitors = np.random.choice(len(self.population), size=3)
-                winner = competitors[np.argmax([self.function.fit(self.population[i]) for i in competitors])]
-                selected_parents.append(self.population[winner])
+                competitors = np.random.choice(len(self.population), size=3, replace=False)
+                competitor_fitness = [
+                    self.function.fit(self.population[i].get_value(self.lower_bound, self.upper_bound)) for i in
+                    competitors]
+                winner_index = competitors[np.argmax(competitor_fitness)]
+                selected_parents.append(self.population[winner_index])
             return np.array(selected_parents)
 
         elif self.selection_method == 'best':
-            return self.population[
-                np.argsort(
-                    [self.function.fit(chromosome.get_value(self.lower_bound, self.upper_bound)) for chromosome in
-                     self.population])[
-                -len(self.population) // 2:]]
+            sorted_indices = np.argsort(fitness_scores)[-len(self.population) // 2:]
+            return [self.population[i] for i in sorted_indices]
+
+        else:
+            raise ValueError("Invalid selection method")
 
     # CROSSOVER
     def crossover(self, parents):
         offspring = []
-        for k in range(len(parents)):
+        num_offspring_needed = len(self.population)
+        while len(offspring) < num_offspring_needed:
+            parent1 = parents[np.random.randint(len(parents))]
+            parent2 = parents[np.random.randint(len(parents))]
             if np.random.rand() < self.p_crossover:
-                parent1 = parents[k]
-                parent2 = parents[np.random.randint(len(parents))]
                 if self.crossover_method == 'single':
                     offspring.append(self.cross_single(parent1, parent2))
                 elif self.crossover_method == 'double':
@@ -133,6 +139,8 @@ class EvolutionaryAlgorithm:
                     offspring.append(self.cross_uniform(parent1, parent2))
                 elif self.crossover_method == 'seeded':
                     offspring.append(self.cross_seeded(parent1, parent2))
+
+        offspring = offspring[:num_offspring_needed]
         return np.array(offspring)
 
     def cross_single(self, parent1: Chromosome, parent2: Chromosome):

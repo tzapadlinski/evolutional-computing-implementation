@@ -19,7 +19,7 @@ class Chromosome:
             value = lower_bound + decimal_value * (upper_bound - lower_bound) / (2 ** n - 1)
             values.append(value)
 
-        return values
+        return np.array(values)
 
 # # Test
 # a = -10
