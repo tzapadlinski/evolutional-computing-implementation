@@ -176,7 +176,7 @@ class GeneticAlgorithmGUI:
         alg.run()
 
         # result = alg.run()
-        result = 'Test'
+        # result = 'Test'
 
         execution_time = time.time() - start_time
 
@@ -198,4 +198,5 @@ class GeneticAlgorithmGUI:
                                 f"Function to Optimize: {function}\n"
                                 f"Optimization Mode: {optimization_mode}\n"
                                 f"Execution Time: {execution_time:.4f} seconds\n"
-                                f"Result: {result}\n")
+                                # f"Result: {result}\n"
+                                )
