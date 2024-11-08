@@ -1,5 +1,7 @@
+import os
 import numpy as np
 import matplotlib.pyplot as plt
+from datetime import datetime
 
 from .chromosome import Chromosome
 from .function import Function
@@ -45,6 +47,9 @@ class EvolutionaryAlgorithm:
 
     def run(self):
         best_fitness_per_generation = []
+        mean_fitness_per_generation = []
+        std_fitness_per_generation = []
+        all_fitness_per_generation = []
 
         for generation in range(self.generations):
             elite_individuals = self.select_elite()
@@ -56,18 +61,55 @@ class EvolutionaryAlgorithm:
 
             fitness_scores = [self.function.fit(chromosome.get_value(self.lower_bound, self.upper_bound)) for chromosome
                               in self.population]
-            # TODO BETTER PLOTTING
-            #a) Wartości funkcji od kolejnej iteracji
-            #b) Średniej wartości funkcji, odchylenia standardowego od kolejnej iteracji
             best_fitness = max(fitness_scores) if self.optimization_mode == 'max' else min(fitness_scores)
-            best_fitness_per_generation.append(best_fitness)
-            print(f'Generation {generation + 1}: Best Fitness: {best_fitness}')
+            mean_fitness = np.mean(fitness_scores)
+            std_fitness = np.std(fitness_scores)
 
-        plt.plot(best_fitness_per_generation)
+            best_fitness_per_generation.append(best_fitness)
+            mean_fitness_per_generation.append(mean_fitness)
+            std_fitness_per_generation.append(std_fitness)
+            all_fitness_per_generation.append(fitness_scores)
+
+            print(
+                f'Generation {generation + 1}: Best Fitness: {best_fitness}, Mean Fitness: {mean_fitness}, Std Fitness: {std_fitness}')
+
+        # Create a unique filename based on the current timestamp and algorithm parameters
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename_base = f"{self.selection_method}_{self.mutation_method}_{self.crossover_method}_{timestamp}"
+
+        # Save the fitness results to a file
+        fitness_results_path = os.path.join(os.getcwd(), f"{filename_base}_fitness_results.txt")
+        with open(fitness_results_path, 'w') as f:
+            for generation, fitness_scores in enumerate(all_fitness_per_generation):
+                f.write(f"Generation {generation + 1}: {fitness_scores}\n")
+
+        # Plot best fitness per generation
+        plt.figure(figsize=(12, 6))
+        plt.subplot(2, 1, 1)
+        plt.plot(best_fitness_per_generation, label='Best Fitness')
         plt.xlabel('Generation')
         plt.ylabel('Best Fitness')
         plt.title('Best Fitness per Generation')
-        plt.show()
+        plt.legend()
+
+        # Plot mean and standard deviation of fitness per generation
+        plt.subplot(2, 1, 2)
+        plt.plot(mean_fitness_per_generation, label='Mean Fitness')
+        plt.fill_between(range(self.generations),
+                         np.array(mean_fitness_per_generation) - np.array(std_fitness_per_generation),
+                         np.array(mean_fitness_per_generation) + np.array(std_fitness_per_generation),
+                         color='b', alpha=0.2, label='Std Dev')
+        plt.xlabel('Generation')
+        plt.ylabel('Fitness')
+        plt.title('Mean and Standard Deviation of Fitness per Generation')
+        plt.legend()
+
+        plt.tight_layout()
+
+        # Save the plot to a file
+        plot_path = os.path.join(os.getcwd(), f"{filename_base}_fitness_plot.png")
+        plt.savefig(plot_path)
+        plt.close()
 
     # ELITE
     def select_elite(self):
