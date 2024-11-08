@@ -15,9 +15,12 @@ class TestEvolutionaryAlgorithm(unittest.TestCase):
         self.selection_method = 'roulette'
         self.mutation_method = 'single'
         self.crossover_method = 'single'
-        self.function = Function(1, 'Griewank')
+        self.function = Function(2, 'Griewank')
         self.optimization_mode = 'max'
         self.uniform_prob = 0.5
+        self.lower_bound = -10
+        self.upper_bound = 10
+        self.num_variables = 2
         self.algorithm = EvolutionaryAlgorithm(
             self.population_size,
             self.chromosome_size,
@@ -28,11 +31,13 @@ class TestEvolutionaryAlgorithm(unittest.TestCase):
             self.mutation_method,
             self.crossover_method,
             self.function,
+            self.num_variables,
             self.optimization_mode,
             self.uniform_prob,
-            -10,
-            10,
-            0.04
+            self.lower_bound,
+            self.upper_bound,
+            0.04,
+            0.1
         )
 
     def test_select_parents(self):
@@ -47,25 +52,25 @@ class TestEvolutionaryAlgorithm(unittest.TestCase):
         self.assertIsInstance(offspring[0], Chromosome)
 
     def test_cross_single(self):
-        parent1 = Chromosome(genes=[0, 1] * (self.chromosome_size // 2))
-        parent2 = Chromosome(genes=[1, 0] * (self.chromosome_size // 2))
+        parent1 = Chromosome(genes=[0, 1] * (self.chromosome_size * self.num_variables // 2), num_variables=self.num_variables)
+        parent2 = Chromosome(genes=[1, 0] * (self.chromosome_size * self.num_variables // 2), num_variables=self.num_variables)
         offspring = self.algorithm.cross_single(parent1, parent2)
         self.assertIsInstance(offspring, Chromosome)
-        self.assertEqual(len(offspring.genes), self.chromosome_size)
+        self.assertEqual(len(offspring.genes), self.chromosome_size * self.num_variables)
 
     def test_cross_double(self):
-        parent1 = Chromosome(genes=[0, 1] * (self.chromosome_size // 2))
-        parent2 = Chromosome(genes=[1, 0] * (self.chromosome_size // 2))
+        parent1 = Chromosome(genes=[0, 1] * (self.chromosome_size * self.num_variables // 2), num_variables=self.num_variables)
+        parent2 = Chromosome(genes=[1, 0] * (self.chromosome_size * self.num_variables // 2), num_variables=self.num_variables)
         offspring = self.algorithm.cross_double(parent1, parent2)
         self.assertIsInstance(offspring, Chromosome)
-        self.assertEqual(len(offspring.genes), self.chromosome_size)
+        self.assertEqual(len(offspring.genes), self.chromosome_size * self.num_variables)
 
     def test_cross_uniform(self):
-        parent1 = Chromosome(genes=[0, 1] * (self.chromosome_size // 2))
-        parent2 = Chromosome(genes=[1, 0] * (self.chromosome_size // 2))
+        parent1 = Chromosome(genes=[0, 1] * (self.chromosome_size * self.num_variables // 2), num_variables=self.num_variables)
+        parent2 = Chromosome(genes=[1, 0] * (self.chromosome_size * self.num_variables // 2), num_variables=self.num_variables)
         offspring = self.algorithm.cross_uniform(parent1, parent2)
         self.assertIsInstance(offspring, Chromosome)
-        self.assertEqual(len(offspring.genes), self.chromosome_size)
+        self.assertEqual(len(offspring.genes), self.chromosome_size * self.num_variables)
 
 if __name__ == '__main__':
     unittest.main()

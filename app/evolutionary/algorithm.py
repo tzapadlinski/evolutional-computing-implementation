@@ -1,6 +1,8 @@
 import numpy as np
+import matplotlib.pyplot as plt
 
 from .chromosome import Chromosome
+from .function import Function
 
 
 class EvolutionaryAlgorithm:
@@ -14,16 +16,18 @@ class EvolutionaryAlgorithm:
                  selection_method,
                  mutation_method,
                  crossover_method,
-                 function,
+                 function: 'Function',
+                 num_variables,
                  optimization_mode,
                  p_uniform,
                  lower_bound,
                  upper_bound,
                  p_inversion,
-                 elite_percentage=0.1
+                 elite_percentage=0.1,
                  ):
-        self.chromosome_size = chromosome_size
-        self.population = [Chromosome(chromosome_size) for _ in range(population_size)]
+        self.chromosome_size = chromosome_size * num_variables
+        self.population = [Chromosome(chromosome_size=chromosome_size * num_variables, num_variables=num_variables) for
+                           _ in range(population_size)]
         self.generations = generations
         self.p_mutation = p_mutation
         self.p_crossover = p_crossover
@@ -31,6 +35,7 @@ class EvolutionaryAlgorithm:
         self.mutation_method = mutation_method
         self.crossover_method = crossover_method
         self.function = function
+        self.num_variables = num_variables
         self.optimization_mode = optimization_mode
         self.p_uniform = p_uniform
         self.lower_bound = lower_bound
@@ -38,9 +43,8 @@ class EvolutionaryAlgorithm:
         self.p_inversion = p_inversion
         self.elite_percentage = elite_percentage
 
-
     def run(self):
-        # TODO plotting
+        best_fitness_per_generation = []
 
         for generation in range(self.generations):
             elite_individuals = self.select_elite()
@@ -50,14 +54,30 @@ class EvolutionaryAlgorithm:
             offspring = self.inverse(offspring)
             self.population = self.update_population(elite_individuals, offspring)
 
-        # TODO rest...
+            fitness_scores = [self.function.fit(chromosome.get_value(self.lower_bound, self.upper_bound)) for chromosome
+                              in self.population]
+            # TODO BETTER PLOTTING
+            #a) Wartości funkcji od kolejnej iteracji
+            #b) Średniej wartości funkcji, odchylenia standardowego od kolejnej iteracji
+            best_fitness = max(fitness_scores) if self.optimization_mode == 'max' else min(fitness_scores)
+            best_fitness_per_generation.append(best_fitness)
+            print(f'Generation {generation + 1}: Best Fitness: {best_fitness}')
+
+        plt.plot(best_fitness_per_generation)
+        plt.xlabel('Generation')
+        plt.ylabel('Best Fitness')
+        plt.title('Best Fitness per Generation')
+        plt.show()
 
     # ELITE
     def select_elite(self):
         num_elite = int(self.elite_percentage * len(self.population))
 
-        fitness_scores = np.array([self.function.fit(chromosome.get_value(self.lower_bound, self.upper_bound)) for chromosome in self.population])
-        elite_indices = np.argsort(fitness_scores)[-num_elite:] if self.optimization_mode == 'max' else np.argsort(fitness_scores)[:num_elite]
+        fitness_scores = np.array(
+            [self.function.fit(chromosome.get_value(self.lower_bound, self.upper_bound)) for chromosome in
+             self.population])
+        elite_indices = np.argsort(fitness_scores)[-num_elite:] if self.optimization_mode == 'max' else np.argsort(
+            fitness_scores)[:num_elite]
         return [self.population[i] for i in elite_indices]
 
     def update_population(self, elite_individuals, offspring):
@@ -66,11 +86,11 @@ class EvolutionaryAlgorithm:
 
     # SELECTION
     def select_parents(self):
-        if self.selection_method == 'roulette':
-            fitness_scores = np.array(
-                [self.function.fit(chromosome.get_value(self.lower_bound, self.upper_bound)) for chromosome in
-                 self.population])
+        fitness_scores = np.array(
+            [self.function.fit(chromosome.get_value(self.lower_bound, self.upper_bound)) for chromosome in
+             self.population])
 
+        if self.selection_method == 'roulette':
             if self.optimization_mode == 'max':
                 min_fitness = np.min(fitness_scores)
                 fitness_scores += abs(min_fitness)
@@ -88,29 +108,39 @@ class EvolutionaryAlgorithm:
         elif self.selection_method == 'tournament':
             selected_parents = []
             for _ in range(len(self.population)):
-                competitors = np.random.choice(len(self.population), size=3)
-                winner = competitors[np.argmax([self.function.fit(self.population[i]) for i in competitors])]
-                selected_parents.append(self.population[winner])
+                competitors = np.random.choice(len(self.population), size=3, replace=False)
+                competitor_fitness = [
+                    self.function.fit(self.population[i].get_value(self.lower_bound, self.upper_bound)) for i in
+                    competitors]
+                winner_index = competitors[np.argmax(competitor_fitness)]
+                selected_parents.append(self.population[winner_index])
             return np.array(selected_parents)
 
         elif self.selection_method == 'best':
-            return self.population[
-                np.argsort([self.function.fit(chromosome.get_value(self.lower_bound, self.upper_bound)) for chromosome in self.population])[
-                -len(self.population) // 2:]]
+            sorted_indices = np.argsort(fitness_scores)[-len(self.population) // 2:]
+            return [self.population[i] for i in sorted_indices]
+
+        else:
+            raise ValueError("Invalid selection method")
 
     # CROSSOVER
     def crossover(self, parents):
         offspring = []
-        for k in range(len(parents)):
+        num_offspring_needed = len(self.population)
+        while len(offspring) < num_offspring_needed:
+            parent1 = parents[np.random.randint(len(parents))]
+            parent2 = parents[np.random.randint(len(parents))]
             if np.random.rand() < self.p_crossover:
-                parent1 = parents[k]
-                parent2 = parents[np.random.randint(len(parents))]
                 if self.crossover_method == 'single':
                     offspring.append(self.cross_single(parent1, parent2))
                 elif self.crossover_method == 'double':
                     offspring.append(self.cross_double(parent1, parent2))
                 elif self.crossover_method == 'uniform':
                     offspring.append(self.cross_uniform(parent1, parent2))
+                elif self.crossover_method == 'seeded':
+                    offspring.append(self.cross_seeded(parent1, parent2))
+
+        offspring = offspring[:num_offspring_needed]
         return np.array(offspring)
 
     def cross_single(self, parent1: Chromosome, parent2: Chromosome):
@@ -118,7 +148,7 @@ class EvolutionaryAlgorithm:
         p1_genes = parent1.genes
         p2_genes = parent2.genes
         offspring_genes = p1_genes[:crossover_point] + p2_genes[crossover_point:]
-        return Chromosome(genes=offspring_genes)
+        return Chromosome(genes=offspring_genes, num_variables=self.num_variables)
 
     def cross_double(self, parent1, parent2):
         crossover_point1 = np.random.randint(1, self.chromosome_size)
@@ -134,9 +164,9 @@ class EvolutionaryAlgorithm:
                 p2_genes[crossover_point1:crossover_point2] +
                 p1_genes[crossover_point2:]
         )
-        return Chromosome(genes=offspring_genes)
+        return Chromosome(genes=offspring_genes, num_variables=self.num_variables)
 
-    #TODO
+    # TODO
     def cross_seeded(self, parent1, parent2):
         pass
 
@@ -145,10 +175,7 @@ class EvolutionaryAlgorithm:
             parent1.genes[i] if np.random.rand() < self.p_uniform else parent2.genes[i]
             for i in range(self.chromosome_size)
         ]
-        return Chromosome(genes=offspring_genes)
-
-    def cross_seeded(self, parent1, parent2):
-        pass
+        return Chromosome(genes=offspring_genes, num_variables=self.num_variables)
 
     # MUTATION
     def mutate(self, offspring: np.ndarray):

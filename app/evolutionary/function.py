@@ -16,6 +16,8 @@ class Function:
             result = self.func(x)
         elif self.function_name == 'Cigar':
             result = self.func.evaluate(x)
+        else:
+            raise ValueError(f"Function {self.function_name} not implemented")
         return result
     
     @staticmethod

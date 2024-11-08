@@ -158,12 +158,15 @@ class GeneticAlgorithmGUI:
             selection_method = selection_method,
             mutation_method = mutation_method,
             crossover_method = cross_method,
-            function = function,
+            function = Function(num_variables, function),
+            num_variables= num_variables,
             optimization_mode = optimization_mode,
             p_uniform = uniform_crossover,
             lower_bound = begin_range,
             upper_bound = end_range,
-            p_inversion = inversion_prob)
+            p_inversion = inversion_prob,
+            elite_percentage = elite_strategy_amount,
+        )
             
         alg.run()
 
