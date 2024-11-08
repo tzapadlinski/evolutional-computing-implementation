@@ -6,7 +6,7 @@ class Function:
         self.function_name = function_name
 
         if function_name == 'Griewank':
-            self.func = bf.Schwefel(n_dimensions=num_vars)
+            self.func = bf.Griewank(n_dimensions=num_vars)
         elif function_name == 'Cigar':
             funcs = opfunu.get_functions_by_classname(function_name)
             self.func = funcs[0](ndim=num_vars)
