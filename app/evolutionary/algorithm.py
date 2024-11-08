@@ -203,9 +203,11 @@ class EvolutionaryAlgorithm:
         )
         return Chromosome(genes=offspring_genes, num_variables=self.num_variables)
 
-    # TODO
     def cross_seeded(self, parent1, parent2):
-        pass
+        seed = np.random.randint(0, 2, size=self.chromosome_size)
+        offspring_genes = [p1 if s == 0 else p2 for p1, p2, s in zip(parent1.genes, parent2.genes, seed)]
+        return Chromosome(genes=offspring_genes, num_variables=self.num_variables)
+
 
     def cross_uniform(self, parent1, parent2):
         offspring_genes = [
