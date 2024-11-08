@@ -73,17 +73,14 @@ class EvolutionaryAlgorithm:
             print(
                 f'Generation {generation + 1}: Best Fitness: {best_fitness}, Mean Fitness: {mean_fitness}, Std Fitness: {std_fitness}')
 
-        # Create a unique filename based on the current timestamp and algorithm parameters
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename_base = f"{self.selection_method}_{self.mutation_method}_{self.crossover_method}_{timestamp}"
 
-        # Save the fitness results to a file
         fitness_results_path = os.path.join(os.getcwd(), f"{filename_base}_fitness_results.txt")
         with open(fitness_results_path, 'w') as f:
             for generation, fitness_scores in enumerate(all_fitness_per_generation):
                 f.write(f"Generation {generation + 1}: {fitness_scores}\n")
 
-        # Plot best fitness per generation
         plt.figure(figsize=(12, 6))
         plt.subplot(2, 1, 1)
         plt.plot(best_fitness_per_generation, label='Best Fitness')
@@ -92,7 +89,6 @@ class EvolutionaryAlgorithm:
         plt.title('Best Fitness per Generation')
         plt.legend()
 
-        # Plot mean and standard deviation of fitness per generation
         plt.subplot(2, 1, 2)
         plt.plot(mean_fitness_per_generation, label='Mean Fitness')
         plt.fill_between(range(self.generations),
@@ -106,7 +102,6 @@ class EvolutionaryAlgorithm:
 
         plt.tight_layout()
 
-        # Save the plot to a file
         plot_path = os.path.join(os.getcwd(), f"{filename_base}_fitness_plot.png")
         plt.savefig(plot_path)
         plt.close()
