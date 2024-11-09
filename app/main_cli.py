@@ -34,7 +34,7 @@ def main():
     all_std_fitness = []
     all_execution_time = []
 
-    for _ in range(1):
+    for _ in range(10):
         alg = EvolutionaryAlgorithm(
             population_size=args.population_size,
             chromosome_size=args.chromosome_size,
