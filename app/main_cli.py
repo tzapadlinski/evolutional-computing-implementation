@@ -34,7 +34,7 @@ def main():
     all_std_fitness = []
     all_execution_time = []
 
-    for _ in range(10):
+    for _ in range(1):
         alg = EvolutionaryAlgorithm(
             population_size=args.population_size,
             chromosome_size=args.chromosome_size,
@@ -70,7 +70,7 @@ def main():
     print(f"Function: {args.function}")
     print(f"Optimization Mode: {args.optimization_mode}")
 
-    print(f"Average Best Fitness: {avg_execution_time}")
+    print(f"Average execution time: {avg_execution_time}")
     plt.figure(figsize=(12, 6))
     plt.subplot(2, 1, 1)
     plt.plot(avg_best_fitness, label='Average Best Fitness')
