@@ -1,4 +1,5 @@
 import os
+import time
 import numpy as np
 import matplotlib.pyplot as plt
 from datetime import datetime
@@ -46,6 +47,7 @@ class EvolutionaryAlgorithm:
         self.elite_percentage = elite_percentage
 
     def run(self):
+        start_time = time.time()
         best_fitness_per_generation = []
         mean_fitness_per_generation = []
         std_fitness_per_generation = []
@@ -72,6 +74,9 @@ class EvolutionaryAlgorithm:
 
             print(
                 f'Generation {generation + 1}: Best Fitness: {best_fitness}, Mean Fitness: {mean_fitness}, Std Fitness: {std_fitness}')
+
+        execution_time = time.time() - start_time
+        print(f"Execution Time: {execution_time:.4f} seconds")
 
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename_base = f"{self.selection_method}_{self.mutation_method}_{self.crossover_method}_{timestamp}"
@@ -105,6 +110,7 @@ class EvolutionaryAlgorithm:
         plot_path = os.path.join(os.getcwd(), f"{filename_base}_fitness_plot.png")
         plt.savefig(plot_path)
         plt.close()
+        return best_fitness_per_generation, mean_fitness_per_generation, std_fitness_per_generation, all_fitness_per_generation, execution_time
 
     # ELITE
     def select_elite(self):

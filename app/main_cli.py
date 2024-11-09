@@ -1,5 +1,10 @@
 import argparse
+import os
 import time
+
+import numpy as np
+from matplotlib import pyplot as plt
+
 from app.evolutionary.algorithm import EvolutionaryAlgorithm
 from app.evolutionary.function import Function
 
@@ -24,38 +29,70 @@ def main():
 
     args = parser.parse_args()
 
-    start_time = time.time()
+    all_best_fitness = []
+    all_mean_fitness = []
+    all_std_fitness = []
+    all_execution_time = []
 
-    alg = EvolutionaryAlgorithm(
-        population_size=args.population_size,
-        chromosome_size=args.chromosome_size,
-        generations=args.num_epochs,
-        p_mutation=args.mutation_prob,
-        p_crossover=args.cross_prob,
-        selection_method=args.selection_method,
-        mutation_method=args.mutation_method,
-        crossover_method=args.cross_method,
-        function=Function(args.num_variables, args.function),
-        num_variables=args.num_variables,
-        optimization_mode=args.optimization_mode,
-        p_uniform=args.uniform_crossover,
-        lower_bound=args.begin_range,
-        upper_bound=args.end_range,
-        p_inversion=args.inversion_prob,
-        elite_percentage=args.elite_strategy_amount,
-    )
+    for _ in range(10):
+        alg = EvolutionaryAlgorithm(
+            population_size=args.population_size,
+            chromosome_size=args.chromosome_size,
+            generations=args.num_epochs,
+            p_mutation=args.mutation_prob,
+            p_crossover=args.cross_prob,
+            selection_method=args.selection_method,
+            mutation_method=args.mutation_method,
+            crossover_method=args.cross_method,
+            function=Function(args.num_variables, args.function),
+            num_variables=args.num_variables,
+            optimization_mode=args.optimization_mode,
+            p_uniform=args.uniform_crossover,
+            lower_bound=args.begin_range,
+            upper_bound=args.end_range,
+            p_inversion=args.inversion_prob,
+            elite_percentage=args.elite_strategy_amount,
+        )
+        best_fitness, mean_fitness, std_fitness, all_fitness, execution_time = alg.run()
+        all_best_fitness.append(best_fitness)
+        all_mean_fitness.append(mean_fitness)
+        all_std_fitness.append(std_fitness)
+        all_execution_time.append(execution_time)
 
-    result = alg.run()
-
-    execution_time = time.time() - start_time
+    avg_best_fitness = np.mean(all_best_fitness, axis=0)
+    avg_mean_fitness = np.mean(all_mean_fitness, axis=0)
+    avg_std_fitness = np.mean(all_std_fitness, axis=0)
+    avg_execution_time = np.mean(all_execution_time, axis=0)
 
     print(f"Selection Method: {args.selection_method}")
     print(f"Cross Method: {args.cross_method}")
     print(f"Mutation Method: {args.mutation_method}")
     print(f"Function: {args.function}")
     print(f"Optimization Mode: {args.optimization_mode}")
-    print(f"Execution Time: {execution_time:.4f} seconds")
-    print(f"Result: {result}")
+
+    print(f"Average Best Fitness: {avg_execution_time}")
+    plt.figure(figsize=(12, 6))
+    plt.subplot(2, 1, 1)
+    plt.plot(avg_best_fitness, label='Average Best Fitness')
+    plt.xlabel('Generation')
+    plt.ylabel('Best Fitness')
+    plt.title('Average Best Fitness per Generation')
+    plt.legend()
+
+    plt.subplot(2, 1, 2)
+    plt.plot(avg_mean_fitness, label='Average Mean Fitness')
+    plt.fill_between(range(args.num_epochs),
+                     avg_mean_fitness - avg_std_fitness,
+                     avg_mean_fitness + avg_std_fitness,
+                     color='b', alpha=0.2, label='Std Dev')
+    plt.xlabel('Generation')
+    plt.ylabel('Fitness')
+    plt.title('Average Mean and Standard Deviation of Fitness per Generation')
+    plt.legend()
+
+    plt.tight_layout()
+    plot_path = os.path.join(os.getcwd(), f"avg_plot.png")
+    plt.savefig(plot_path)
 
 if __name__ == "__main__":
     main()
