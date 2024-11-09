@@ -33,6 +33,7 @@ def main():
     all_mean_fitness = []
     all_std_fitness = []
     all_execution_time = []
+    all_best_obtained_optimums = []
 
     for _ in range(10):
         alg = EvolutionaryAlgorithm(
@@ -53,11 +54,13 @@ def main():
             p_inversion=args.inversion_prob,
             elite_percentage=args.elite_strategy_amount,
         )
-        best_fitness, mean_fitness, std_fitness, all_fitness, execution_time = alg.run()
+        best_fitness, mean_fitness, std_fitness, all_fitness, execution_time, best_chromosome = alg.run()
+        obtained_optimum = alg.function.fit(best_chromosome.get_value(alg.lower_bound, alg.upper_bound))
         all_best_fitness.append(best_fitness)
         all_mean_fitness.append(mean_fitness)
         all_std_fitness.append(std_fitness)
         all_execution_time.append(execution_time)
+        all_best_obtained_optimums.append(obtained_optimum)
 
     avg_best_fitness = np.mean(all_best_fitness, axis=0)
     avg_mean_fitness = np.mean(all_mean_fitness, axis=0)
@@ -154,5 +157,15 @@ def main():
     plt.tight_layout()
     plot_path_worst = os.path.join(os.getcwd(), "worst_plot.png")
     plt.savefig(plot_path_worst)
+
+    actual_optimum = 0.0
+    best_obtained_optimum = all_best_obtained_optimums[best_run_index]
+    error = abs(actual_optimum - best_obtained_optimum)
+
+    print(f"Number of Variables: {args.num_variables}")
+    print(f"Actual Optimum: {actual_optimum}")
+    print(f"Obtained Optimum: {best_obtained_optimum}")
+    print(f"Error: {error}")
+
 if __name__ == "__main__":
     main()
