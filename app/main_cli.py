@@ -70,7 +70,7 @@ def main():
     print(f"Function: {args.function}")
     print(f"Optimization Mode: {args.optimization_mode}")
 
-    print(f"Average execution time: {avg_execution_time}")
+    print(f"Average execution Time: {avg_execution_time:.4f} seconds")
     plt.figure(figsize=(12, 6))
     plt.subplot(2, 1, 1)
     plt.plot(avg_best_fitness, label='Average Best Fitness')
