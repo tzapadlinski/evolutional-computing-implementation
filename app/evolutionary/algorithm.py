@@ -142,21 +142,28 @@ class EvolutionaryAlgorithm:
             selected_indices = np.random.choice(len(self.population), size=len(self.population), p=probabilities)
             return [self.population[i] for i in selected_indices]
 
+
+
         elif self.selection_method == 'tournament':
             selected_parents = []
             for _ in range(len(self.population)):
                 competitors = np.random.choice(len(self.population), size=3, replace=False)
                 competitor_fitness = [
                     self.function.fit(self.population[i].get_value(self.lower_bound, self.upper_bound)) for i in
-                    competitors]
-                winner_index = competitors[np.argmax(competitor_fitness)]
+                    competitors
+                ]
+                if self.optimization_mode == 'max':
+                    winner_index = competitors[np.argmax(competitor_fitness)]
+                else:
+                    winner_index = competitors[np.argmin(competitor_fitness)]
                 selected_parents.append(self.population[winner_index])
             return np.array(selected_parents)
-
         elif self.selection_method == 'best':
-            sorted_indices = np.argsort(fitness_scores)[-len(self.population) // 2:]
+            if self.optimization_mode == 'max':
+                sorted_indices = np.argsort(fitness_scores)[-len(self.population) // 2:]
+            else:
+                sorted_indices = np.argsort(fitness_scores)[:len(self.population) // 2]
             return [self.population[i] for i in sorted_indices]
-
         else:
             raise ValueError("Invalid selection method")
 
