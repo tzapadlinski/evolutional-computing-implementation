@@ -28,7 +28,7 @@ class EvolutionaryAlgorithm:
                  elite_percentage=0.1,
                  ):
         self.chromosome_size = chromosome_size * num_variables
-        self.population = [Chromosome(chromosome_size=chromosome_size * num_variables, num_variables=num_variables) for
+        self.population = [Chromosome(num_vars=num_variables, lower_bound=lower_bound, upper_bound=upper_bound) for
                            _ in range(population_size)]
         self.generations = generations
         self.p_mutation = p_mutation
@@ -59,7 +59,7 @@ class EvolutionaryAlgorithm:
             offspring = self.inverse(offspring)
             self.population = self.update_population(elite_individuals, offspring)
 
-            fitness_scores = [self.function.fit(chromosome.get_value(self.lower_bound, self.upper_bound)) for chromosome
+            fitness_scores = [self.function.fit(chromosome.get_value()) for chromosome
                               in self.population]
             best_fitness = max(fitness_scores) if self.optimization_mode == 'max' else min(fitness_scores)
             mean_fitness = np.mean(fitness_scores)
@@ -111,7 +111,7 @@ class EvolutionaryAlgorithm:
         num_elite = int(self.elite_percentage * len(self.population))
 
         fitness_scores = np.array(
-            [self.function.fit(chromosome.get_value(self.lower_bound, self.upper_bound)) for chromosome in
+            [self.function.fit(chromosome.get_value()) for chromosome in
              self.population])
         elite_indices = np.argsort(fitness_scores)[-num_elite:] if self.optimization_mode == 'max' else np.argsort(
             fitness_scores)[:num_elite]
@@ -124,7 +124,7 @@ class EvolutionaryAlgorithm:
     # SELECTION
     def select_parents(self):
         fitness_scores = np.array(
-            [self.function.fit(chromosome.get_value(self.lower_bound, self.upper_bound)) for chromosome in
+            [self.function.fit(chromosome.get_value()) for chromosome in
              self.population])
 
         if self.selection_method == 'roulette':
@@ -142,14 +142,12 @@ class EvolutionaryAlgorithm:
             selected_indices = np.random.choice(len(self.population), size=len(self.population), p=probabilities)
             return [self.population[i] for i in selected_indices]
 
-
-
         elif self.selection_method == 'tournament':
             selected_parents = []
             for _ in range(len(self.population)):
                 competitors = np.random.choice(len(self.population), size=3, replace=False)
                 competitor_fitness = [
-                    self.function.fit(self.population[i].get_value(self.lower_bound, self.upper_bound)) for i in
+                    self.function.fit(self.population[i].get_value()) for i in
                     competitors
                 ]
                 if self.optimization_mode == 'max':
@@ -175,90 +173,51 @@ class EvolutionaryAlgorithm:
             parent1 = parents[np.random.randint(len(parents))]
             parent2 = parents[np.random.randint(len(parents))]
             if np.random.rand() < self.p_crossover:
-                if self.crossover_method == 'single':
-                    offspring.append(self.cross_single(parent1, parent2))
-                elif self.crossover_method == 'double':
-                    offspring.append(self.cross_double(parent1, parent2))
-                elif self.crossover_method == 'uniform':
-                    offspring.append(self.cross_uniform(parent1, parent2))
-                elif self.crossover_method == 'seeded':
-                    offspring.append(self.cross_seeded(parent1, parent2))
+                if self.crossover_method == 'arithmetic':
+                    offspring.append(self.arithmetic_cross(parent1, parent2))
+                elif self.crossover_method == 'linear':
+                    offspring.append(self.linear_cross(parent1, parent2))
+                elif self.crossover_method == 'alpha-blended':
+                    offspring.append(self.alpha_blend_cross(parent1, parent2))
+                elif self.crossover_method == 'alpha-beta-blended':
+                    offspring.append(self.alpha_beta_blend_cross(parent1, parent2))
+                elif self.crossover_method == 'averaging':
+                    offspring.append(self.averaging_cross(parent1, parent2))
 
         offspring = offspring[:num_offspring_needed]
         return np.array(offspring)
 
-    def cross_single(self, parent1: Chromosome, parent2: Chromosome):
-        crossover_point = np.random.randint(1, self.chromosome_size)
-        p1_genes = parent1.genes
-        p2_genes = parent2.genes
-        offspring_genes = p1_genes[:crossover_point] + p2_genes[crossover_point:]
-        return Chromosome(genes=offspring_genes, num_variables=self.num_variables)
+    def arithmetic_cross(self, parent1: Chromosome, parent2: Chromosome):
+        pass
 
-    def cross_double(self, parent1, parent2):
-        crossover_point1 = np.random.randint(1, self.chromosome_size)
-        crossover_point2 = np.random.randint(1, self.chromosome_size)
-        if crossover_point1 > crossover_point2:
-            crossover_point1, crossover_point2 = crossover_point2, crossover_point1
+    def linear_cross(self, parent1, parent2):
+        pass
 
-        p1_genes = parent1.genes
-        p2_genes = parent2.genes
+    def alpha_blend_cross(self, parent1, parent2):
+        pass
 
-        offspring_genes = (
-                p1_genes[:crossover_point1] +
-                p2_genes[crossover_point1:crossover_point2] +
-                p1_genes[crossover_point2:]
-        )
-        return Chromosome(genes=offspring_genes, num_variables=self.num_variables)
+    def alpha_beta_blend_cross(self, parent1, parent2):
+        pass
 
-    def cross_seeded(self, parent1, parent2):
-        seed = np.random.randint(0, 2, size=self.chromosome_size)
-        offspring_genes = [p1 if s == 0 else p2 for p1, p2, s in zip(parent1.genes, parent2.genes, seed)]
-        return Chromosome(genes=offspring_genes, num_variables=self.num_variables)
-
-
-    def cross_uniform(self, parent1, parent2):
-        offspring_genes = [
-            parent1.genes[i] if np.random.rand() < self.p_uniform else parent2.genes[i]
-            for i in range(self.chromosome_size)
-        ]
-        return Chromosome(genes=offspring_genes, num_variables=self.num_variables)
+    def averaging_cross(self, parent1, parent2):
+        pass
 
     # MUTATION
     def mutate(self, offspring: np.ndarray):
         for idx in range(offspring.shape[0]):
             if np.random.rand() < self.p_mutation:
-                if self.mutation_method == 'single':
-                    self.single_point_mutation(offspring)
-                elif self.mutation_method == 'double':
-                    self.two_point_mutation(offspring)
-                elif self.mutation_method == 'boundary':
-                    self.boundary_mutation(offspring)
+                if self.mutation_method == 'uniform':
+                    self.uniform_mutation(offspring)
+                elif self.mutation_method == 'gaussian':
+                    self.gaussian_mutation(offspring)
         return offspring
 
-    def single_point_mutation(self, offspring):
-        for chromosome in offspring:
-            mutation_point = np.random.randint(0, self.chromosome_size)
-            chromosome.genes[mutation_point] = 1 - chromosome.genes[mutation_point]
+    def uniform_mutation(self, offspring):
+        pass
 
-    def two_point_mutation(self, offspring):
-        for chromosome in offspring:
-            point1 = np.random.randint(0, self.chromosome_size)
-            point2 = np.random.randint(0, self.chromosome_size)
-            if point1 > point2:
-                point1, point2 = point2, point1
-            for i in range(point1, point2 + 1):
-                chromosome.genes[i] = 1 - chromosome.genes[i]
+    def gaussian_mutation(self, offspring):
+        pass
 
-    def boundary_mutation(self, offspring):
-        for chromosome in offspring:
-            boundary_point = np.random.choice([0, self.chromosome_size - 1])
-            chromosome.genes[boundary_point] = 1 - chromosome.genes[boundary_point]
-
-    # INVERSION
+    # INVERSION should be included??????????????????????????????????????????
     def inverse(self, offspring: np.ndarray):
-        for chromosome in offspring:
-            if np.random.rand() < self.p_inversion:
-                start = np.random.randint(0, self.chromosome_size)
-                end = np.random.randint(start, self.chromosome_size)
-                chromosome.genes[start:end] = reversed(chromosome.genes[start:end])
-        return offspring
+        pass
