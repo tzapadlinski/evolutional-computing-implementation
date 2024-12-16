@@ -187,8 +187,12 @@ class EvolutionaryAlgorithm:
         offspring = offspring[:num_offspring_needed]
         return np.array(offspring)
 
-    def arithmetic_cross(self, parent1: Chromosome, parent2: Chromosome):
-        pass
+    @staticmethod
+    def arithmetic_cross(parent1: Chromosome, parent2: Chromosome):
+        alpha = np.random.rand()
+        beta = 1 - alpha
+        offspring_genes = alpha * parent1.get_value() + beta * parent2.get_value()
+        return Chromosome(genes=offspring_genes)
 
     def linear_cross(self, parent1, parent2):
         pass
