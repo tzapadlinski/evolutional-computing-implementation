@@ -26,10 +26,6 @@ class GeneticAlgorithmGUI:
         self.population_size_entry = ttk.Entry(input_frame, font=("Helvetica", 11), width=25)
         self.population_size_entry.grid(row=0, column=1, padx=5, pady=5)
 
-        ttk.Label(input_frame, text="Number of bit per variable:", font=("Helvetica", 11)).grid(row=1, column=0, padx=5, pady=5, sticky="w")
-        self.gene_size_entry = ttk.Entry(input_frame, font=("Helvetica", 11), width=25)
-        self.gene_size_entry.grid(row=1, column=1, padx=5, pady=5)
-
         ttk.Label(input_frame, text="Number of Variables:", font=("Helvetica", 11)).grid(row=2, column=0, padx=5, pady=5, sticky="w")
         self.num_variables_entry = ttk.Entry(input_frame, font=("Helvetica", 11), width=25)
         self.num_variables_entry.grid(row=2, column=1, padx=5, pady=5)
@@ -73,15 +69,15 @@ class GeneticAlgorithmGUI:
         self.uniform_crossover_prob_entry.grid(row=11, column=1, padx=5, pady=5)
 
         ttk.Label(input_frame, text="Cross Method:", font=("Helvetica", 11)).grid(row=12, column=0, padx=5, pady=5, sticky="w")
-        self.cross_method_var = tk.StringVar(value="single")
+        self.cross_method_var = tk.StringVar(value="arithmetic")
         self.cross_method_dropdown = ttk.Combobox(input_frame, textvariable=self.cross_method_var, font=("Helvetica", 11), state="readonly")
-        self.cross_method_dropdown['values'] = ("single", "double", "uniform", "seeded")
+        self.cross_method_dropdown['values'] = ("arithmetic", "linear", "alpha-blended", "alpha-beta-blended", "averaging")
         self.cross_method_dropdown.grid(row=12, column=1, padx=5, pady=5)
 
         ttk.Label(input_frame, text="Mutation Method:", font=("Helvetica", 11)).grid(row=13, column=0, padx=5, pady=5, sticky="w")
-        self.mutation_method_var = tk.StringVar(value="one-point")
+        self.mutation_method_var = tk.StringVar(value="uniform")
         self.mutation_method_dropdown = ttk.Combobox(input_frame, textvariable=self.mutation_method_var, font=("Helvetica", 11), state="readonly")
-        self.mutation_method_dropdown['values'] = ("one-point", "two-point")
+        self.mutation_method_dropdown['values'] = ("uniform", "gaussian")
         self.mutation_method_dropdown.grid(row=13, column=1, padx=5, pady=5)
 
         available_functions = Function.get_available_functions()
@@ -126,12 +122,11 @@ class GeneticAlgorithmGUI:
         except ValueError as e:
             messagebox.showerror("Input Error", f"Invalid value for {field_name}: {e}")
             return None
-        
+
     def run_algorithm(self):
         self.output_text.delete(1.0, tk.END)
 
         population_size = self.validate_input("Population Size", self.population_size_entry.get(), int)
-        gene_size = self.validate_input("Number of bit per variable:", self.gene_size_entry.get(), int)
         num_variables = self.validate_input("Number of Variables", self.num_variables_entry.get(), int)
         num_epochs = self.validate_input("Number of Epochs", self.num_epochs_entry.get(), int)
         begin_range = self.validate_input("Begin Range", self.begin_range_entry.get(), float)
@@ -148,14 +143,14 @@ class GeneticAlgorithmGUI:
         function = self.function_var.get()
         optimization_mode = self.optimization_mode_var.get()
 
-        if None in [population_size, gene_size, num_variables, num_epochs, begin_range, end_range, elite_strategy_amount,
+        if None in [population_size, num_variables, num_epochs, begin_range, end_range, elite_strategy_amount,
                     cross_prob, mutation_prob, inversion_prob, uniform_crossover]:
-            return 
+            return
 
         start_time = time.time()
 
         alg = EvolutionaryAlgorithm(
-            population_size = population_size, 
+            population_size = population_size,
             chromosome_size = num_variables,
             generations = num_epochs,
             p_mutation = mutation_prob,
@@ -172,17 +167,13 @@ class GeneticAlgorithmGUI:
             p_inversion = inversion_prob,
             elite_percentage = elite_strategy_amount,
         )
-            
-        alg.run()
 
-        # result = alg.run()
-        # result = 'Test'
+        alg.run()
 
         execution_time = time.time() - start_time
 
         self.output_text.insert(tk.END,
                                 f"Population Size: {population_size}\n"
-                                f"Number of Bits per Variable: {gene_size}\n"
                                 f"Number of Variables: {num_variables}\n"
                                 f"Number of Epochs: {num_epochs}\n"
                                 f"Beginning of Range: {begin_range}\n"
@@ -198,5 +189,4 @@ class GeneticAlgorithmGUI:
                                 f"Function to Optimize: {function}\n"
                                 f"Optimization Mode: {optimization_mode}\n"
                                 f"Execution Time: {execution_time:.4f} seconds\n"
-                                # f"Result: {result}\n"
                                 )

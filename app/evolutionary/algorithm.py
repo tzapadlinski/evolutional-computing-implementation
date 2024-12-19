@@ -1,4 +1,6 @@
 import os
+from random import random
+
 import numpy as np
 import matplotlib.pyplot as plt
 from datetime import datetime
@@ -56,7 +58,7 @@ class EvolutionaryAlgorithm:
             parents = self.select_parents()
             offspring = self.crossover(parents)
             offspring = self.mutate(offspring)
-            offspring = self.inverse(offspring)
+            # offspring = self.inverse(offspring)
             self.population = self.update_population(elite_individuals, offspring)
 
             fitness_scores = [self.function.fit(chromosome.get_value()) for chromosome
@@ -280,10 +282,21 @@ class EvolutionaryAlgorithm:
         return offspring
 
     def uniform_mutation(self, offspring):
-        pass
+        for chromosome in offspring:
+            for gene_index in range(len(chromosome.genes)):
+                if np.random.rand() < self.p_mutation:
+                    chromosome.genes[gene_index] = np.random.uniform(self.lower_bound, self.upper_bound)
+        return offspring
 
     def gaussian_mutation(self, offspring):
-        pass
+        for chromosome in offspring:
+            for gene_index in range(len(chromosome.genes)):
+                if np.random.rand() < self.p_mutation:
+                    mutation_value = np.random.normal(0, 1)
+                    chromosome.genes[gene_index] += mutation_value
+                    chromosome.genes[gene_index] = np.clip(chromosome.genes[gene_index], self.lower_bound,
+                                                           self.upper_bound)
+        return offspring
 
     # INVERSION should be included??????????????????????????????????????????
     def inverse(self, offspring: np.ndarray):

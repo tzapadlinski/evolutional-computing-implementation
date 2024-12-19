@@ -12,6 +12,8 @@ class Function:
             self.func = funcs[0](ndim=num_vars)
 
     def fit(self, x):
+        x = [float(value) for value in x]
+
         if self.function_name == 'Griewank':
             result = self.func(x)
         elif self.function_name == 'Cigar':
