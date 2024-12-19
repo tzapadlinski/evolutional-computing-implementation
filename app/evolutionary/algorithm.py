@@ -205,38 +205,34 @@ class EvolutionaryAlgorithm:
         W = -0.5 * parent1 + 1.5 * parent2
 
         function_values = [
-            (Chromosome(genes=Z)),
-            (Chromosome(genes=V)),
-            (Chromosome(genes=W)),
-            ]
-        
-        function_values_sorted = sorted(function_values, key=lambda x: self.function.fit(x.get_value()))
-        
-        if self.optimization_mode == 'max':
-            best_fits = function_values_sorted[1:]
-        else:
-            best_fits = function_values_sorted[:1]
+            Chromosome(genes=Z),
+            Chromosome(genes=V),
+            Chromosome(genes=W),
+        ]
 
-        return best_fits
-        
+        function_values_sorted = sorted(function_values, key=lambda x: self.function.fit(x.get_value()))
+
+        if self.optimization_mode == 'max':
+            best_fit = function_values_sorted[-1]
+        else:
+            best_fit = function_values_sorted[0]
+
+        return best_fit
+
     def alpha_blend_cross(self, parent1, parent2):
         parent1 = np.array(parent1.get_value())
         parent2 = np.array(parent2.get_value())
         alpha = np.random.rand()
 
-        offspring1 = []
-        offspring2 = []
+        offspring = []
 
         for i in range(len(parent1)):
-            d = abs(parent1[i]-parent2[i])
-
+            d = abs(parent1[i] - parent2[i])
             lower = min(parent1[i], parent2[i]) - alpha * d
             upper = min(parent1[i], parent2[i]) + alpha * d
-            
-            offspring1.append(lower + np.random.rand() * (upper - lower))
-            offspring2.append(lower + np.random.rand() * (upper - lower))
+            offspring.append(lower + np.random.rand() * (upper - lower))
 
-        return [Chromosome(genes=offspring1),Chromosome(genes=offspring2)]
+        return Chromosome(genes=offspring)
 
     def alpha_beta_blend_cross(self, parent1, parent2):
         parent1 = np.array(parent1.get_value())
@@ -244,32 +240,23 @@ class EvolutionaryAlgorithm:
         alpha = np.random.rand()
         beta = np.random.rand()
 
-        offspring1 = []
-        offspring2 = []
+        offspring = []
 
         for i in range(len(parent1)):
-            d = abs(parent1[i]-parent2[i])
-
+            d = abs(parent1[i] - parent2[i])
             lower = min(parent1[i], parent2[i]) - alpha * d
             upper = min(parent1[i], parent2[i]) + beta * d
-            
-            offspring1.append(lower + random.random() * (upper - lower))
-            offspring2.append(lower + random.random() * (upper - lower))
+            offspring.append(lower + np.random.rand() * (upper - lower))
 
-        return [Chromosome(genes=offspring1),Chromosome(genes=offspring2)]
+        return Chromosome(genes=offspring)
 
     def averaging_cross(self, parent1, parent2):
         parent1 = np.array(parent1.get_value())
         parent2 = np.array(parent2.get_value())
 
-        offspring = []
+        offspring = [(parent1[i] + parent2[i]) / 2.0 for i in range(len(parent1))]
 
-        for i in range(len(parent1)):
-            avg = (parent1[i] + parent2[i]) / 2.0
-            
-            offspring.append(avg)
-
-        return [Chromosome(genes=offspring)]
+        return Chromosome(genes=offspring)
 
     # MUTATION
     def mutate(self, offspring: np.ndarray):
