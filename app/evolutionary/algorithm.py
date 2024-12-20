@@ -1,6 +1,5 @@
 import os
-from random import random
-
+import time
 import numpy as np
 import matplotlib.pyplot as plt
 from datetime import datetime
@@ -48,6 +47,8 @@ class EvolutionaryAlgorithm:
         self.elite_percentage = elite_percentage
 
     def run(self):
+        start_time = time.time()
+        best_chromosome = None
         best_fitness_per_generation = []
         mean_fitness_per_generation = []
         std_fitness_per_generation = []
@@ -71,9 +72,14 @@ class EvolutionaryAlgorithm:
             mean_fitness_per_generation.append(mean_fitness)
             std_fitness_per_generation.append(std_fitness)
             all_fitness_per_generation.append(fitness_scores)
+            best_fitness_idx = fitness_scores.index(best_fitness) if self.optimization_mode == 'max' else fitness_scores.index(best_fitness)
+            best_chromosome = self.population[best_fitness_idx]
 
             print(
                 f'Generation {generation + 1}: Best Fitness: {best_fitness}, Mean Fitness: {mean_fitness}, Std Fitness: {std_fitness}')
+
+        execution_time = time.time() - start_time
+        print(f"Execution Time: {execution_time:.4f} seconds")
 
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename_base = f"{self.selection_method}_{self.mutation_method}_{self.crossover_method}_{timestamp}"
@@ -107,6 +113,7 @@ class EvolutionaryAlgorithm:
         plot_path = os.path.join(os.getcwd(), f"{filename_base}_fitness_plot.png")
         plt.savefig(plot_path)
         plt.close()
+        return best_fitness_per_generation, mean_fitness_per_generation, std_fitness_per_generation, all_fitness_per_generation, execution_time, best_chromosome
 
     # ELITE
     def select_elite(self):
