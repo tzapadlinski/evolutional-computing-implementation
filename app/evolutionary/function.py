@@ -1,4 +1,5 @@
 import benchmark_functions as bf
+import numpy as np
 import opfunu
 
 class Function:
@@ -17,6 +18,7 @@ class Function:
         if self.function_name == 'Griewank':
             result = self.func(x)
         elif self.function_name == 'Cigar':
+            x = np.array(x)
             result = self.func.evaluate(x)
         else:
             raise ValueError(f"Function {self.function_name} not implemented")
