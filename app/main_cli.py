@@ -73,12 +73,16 @@ def main():
         fitness = 1.0 / (output + 1.0)
         return fitness
 
+    best_output_per_generation = []
     best_fitness_per_generation = []
     mean_fitness_per_generation = []
     std_fitness_per_generation = []
 
     def on_generation(ga_instance):
-        best_fitness_per_generation.append(ga_instance.best_solution()[1])
+        best_solution, best_fitness, _ = ga_instance.best_solution()
+        best_output = griewank_func(best_solution)
+        best_output_per_generation.append(best_output)
+        best_fitness_per_generation.append(best_fitness)
         mean_fitness_per_generation.append(np.mean(ga_instance.last_generation_fitness))
         std_fitness_per_generation.append(np.std(ga_instance.last_generation_fitness))
 
@@ -255,15 +259,26 @@ def main():
     filename_base = f"{selection_method}_{mutation_method_name}_{crossover_method_name}_{timestamp}"
 
     plt.figure(figsize=(12, 6))
-    plt.subplot(2, 1, 1)
-    plt.plot(best_fitness_per_generation, label='Best Fitness')
+
+    # Plotting Best Griewank Output
+    plt.subplot(3, 1, 1)
+    plt.plot(best_output_per_generation, label='Best Griewank Output', color='red')
+    plt.xlabel('Generation')
+    plt.ylabel('Output')
+    plt.title('Best Griewank Output per Generation')
+    plt.legend()
+
+    # Plotting Best Fitness
+    plt.subplot(3, 1, 2)
+    plt.plot(best_fitness_per_generation, label='Best Fitness', color='blue')
     plt.xlabel('Generation')
     plt.ylabel('Best Fitness')
     plt.title('Best Fitness per Generation')
     plt.legend()
 
-    plt.subplot(2, 1, 2)
-    plt.plot(mean_fitness_per_generation, label='Mean Fitness')
+    # Plotting Mean Fitness and Standard Deviation
+    plt.subplot(3, 1, 3)
+    plt.plot(mean_fitness_per_generation, label='Mean Fitness', color='green')
     plt.fill_between(range(generations),
                      np.array(mean_fitness_per_generation) - np.array(std_fitness_per_generation),
                      np.array(mean_fitness_per_generation) + np.array(std_fitness_per_generation),
