@@ -84,33 +84,16 @@ def main():
 
 ############################## FUNCTIONS ###############################################
 
-    def single_point_mutation(offspring, ga_instance):
-        for chromosome_idx in range(offspring.shape[0]):
-            mutation_point = np.random.randint(0, offspring.shape[1])
-            offspring[chromosome_idx, mutation_point] = 1 - offspring[chromosome_idx, mutation_point]
-        return offspring
-
-    def two_point_mutation(offspring, ga_instance):
-        for chromosome_idx in range(offspring.shape[0]):
-            point1 = np.random.randint(0, offspring.shape[1])
-            point2 = np.random.randint(0, offspring.shape[1])
-
-            if point1 > point2:
-                point1, point2 = point2, point1
-
-            offspring[chromosome_idx, point1:point2 + 1] = 1 - offspring[chromosome_idx, point1:point2 + 1]
-        return offspring
-
     def boundary_mutation(offspring, ga_instance):
         for chromosome_idx in range(offspring.shape[0]):
             boundary_point = np.random.choice([0, offspring.shape[1] - 1])
             offspring[chromosome_idx, boundary_point] = 1 - offspring[chromosome_idx, boundary_point]
         return offspring
 
-    def uniform_mutation(offspring, ga_instance):
+    def uniform_mutation(offspring, ga_instance: pygad.GA):
         p_mutation = ga_instance.mutation_probability
-        lower_bound = ga_instance.lower_bound
-        upper_bound = ga_instance.upper_bound
+        lower_bound = ga_instance.init_range_low
+        upper_bound = ga_instance.init_range_high
 
         for chromosome_idx in range(offspring.shape[0]):
             for gene_index in range(offspring.shape[1]):
@@ -120,8 +103,8 @@ def main():
 
     def gaussian_mutation(offspring, ga_instance):
         p_mutation = ga_instance.mutation_probability
-        lower_bound = ga_instance.lower_bound
-        upper_bound = ga_instance.upper_bound
+        lower_bound = ga_instance.init_range_low
+        upper_bound = ga_instance.init_range_high
 
         for chromosome_idx in range(offspring.shape[0]):
             for gene_index in range(offspring.shape[1]):
@@ -222,12 +205,13 @@ def main():
     }
 
     custom_mutation_methods = {
-        "single_point": single_point_mutation,
-        "two_point": two_point_mutation,
         "boundary": boundary_mutation,
         "uniform": uniform_mutation,
         "gaussian": gaussian_mutation
     }
+
+    crossover_method_name = crossover_method
+    mutation_method_name = mutation_method
 
     if args.cross_method in custom_crossover_methods:
         crossover_method = custom_crossover_methods[args.cross_method]
@@ -268,7 +252,7 @@ def main():
     ga_instance.run()
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    filename_base = f"{selection_method}_{mutation_method}_{crossover_method}_{timestamp}"
+    filename_base = f"{selection_method}_{mutation_method_name}_{crossover_method_name}_{timestamp}"
 
     plt.figure(figsize=(12, 6))
     plt.subplot(2, 1, 1)
