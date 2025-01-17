@@ -241,64 +241,108 @@ def main():
     else:
         _type = float
 
-    ga_instance = pygad.GA(num_generations=generations,
-                           num_parents_mating=parent_population,
-                           fitness_func=function,
-                           sol_per_pop=population_size,
-                           num_genes=num_variables,
-                           gene_type=_type,
-                           parent_selection_type=selection_method,
-                           crossover_type=crossover_method,
-                           mutation_type=mutation_method,
-                           init_range_low=lower_bound,
-                           init_range_high=upper_bound,
-                           mutation_probability=p_mutation,
-                           keep_elitism=elite,
-                           on_generation=on_generation)
-    ga_instance.run()
+    execution_times = []
+    results_per_run = []
+
+    for run in range(10):
+        best_output_per_generation = []
+        best_fitness_per_generation = []
+        mean_fitness_per_generation = []
+        std_fitness_per_generation = []
+
+        start_time = time.time()
+        ga_instance = pygad.GA(num_generations=generations,
+                               num_parents_mating=parent_population,
+                               fitness_func=function,
+                               sol_per_pop=population_size,
+                               num_genes=num_variables,
+                               gene_type=_type,
+                               parent_selection_type=selection_method,
+                               crossover_type=crossover_method,
+                               mutation_type=mutation_method,
+                               init_range_low=lower_bound,
+                               init_range_high=upper_bound,
+                               mutation_probability=p_mutation,
+                               keep_elitism=elite,
+                               on_generation=on_generation)
+        ga_instance.run()
+        execution_times.append(time.time() - start_time)
+
+        # Store results for this run
+        results_per_run.append({
+            "best_output": best_output_per_generation,
+            "best_fitness": best_fitness_per_generation,
+            "mean_fitness": mean_fitness_per_generation,
+            "std_fitness": std_fitness_per_generation
+        })
+
+    # Calculate average execution time
+    avg_execution_time = np.mean(execution_times)
+    print(f"Average Execution Time: {avg_execution_time:.4f} seconds")
+
+    # Determine best and worst runs
+    best_run_idx = np.argmin([np.min(run["best_fitness"]) for run in results_per_run])
+    worst_run_idx = np.argmax([np.min(run["best_fitness"]) for run in results_per_run])
+    best_run = results_per_run[best_run_idx]
+    worst_run = results_per_run[worst_run_idx]
+
+    # Compute average results across all runs
+    avg_results = {
+        "best_output": np.mean([run["best_output"] for run in results_per_run], axis=0),
+        "best_fitness": np.mean([run["best_fitness"] for run in results_per_run], axis=0),
+        "mean_fitness": np.mean([run["mean_fitness"] for run in results_per_run], axis=0),
+        "std_fitness": np.mean([run["std_fitness"] for run in results_per_run], axis=0),
+    }
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     filename_base = f"{selection_method}_{mutation_method_name}_{crossover_method_name}_{timestamp}"
 
-    plt.figure(figsize=(12, 6))
+    def plot_results(title, results, filename_suffix):
+        plt.figure(figsize=(12, 9))
 
-    # Plotting Best Griewank Output
-    plt.subplot(3, 1, 1)
-    plt.plot(best_output_per_generation, label='Best Griewank Output', color='red')
-    plt.xlabel('Generation')
-    plt.ylabel('Output')
-    plt.title('Best Griewank Output per Generation')
-    plt.legend()
+        # Plotting Best Griewank Output
+        plt.subplot(3, 1, 1)
+        plt.plot(results["best_output"], label='Best Griewank Output', color='red')
+        plt.xlabel('Generation')
+        plt.ylabel('Output')
+        plt.title(f'Best Griewank Output per Generation ({title})')
+        plt.legend()
 
-    # Plotting Best Fitness
-    plt.subplot(3, 1, 2)
-    plt.plot(best_fitness_per_generation, label='Best Fitness', color='blue')
-    plt.xlabel('Generation')
-    plt.ylabel('Best Fitness')
-    plt.title('Best Fitness per Generation')
-    plt.legend()
+        # Plotting Best Fitness
+        plt.subplot(3, 1, 2)
+        plt.plot(results["best_fitness"], label='Best Fitness', color='blue')
+        plt.xlabel('Generation')
+        plt.ylabel('Best Fitness')
+        plt.title(f'Best Fitness per Generation ({title})')
+        plt.legend()
 
-    # Plotting Mean Fitness and Standard Deviation
-    plt.subplot(3, 1, 3)
-    plt.plot(mean_fitness_per_generation, label='Mean Fitness', color='green')
-    plt.fill_between(range(generations),
-                     np.array(mean_fitness_per_generation) - np.array(std_fitness_per_generation),
-                     np.array(mean_fitness_per_generation) + np.array(std_fitness_per_generation),
-                     color='b', alpha=0.2, label='Std Dev')
-    plt.xlabel('Generation')
-    plt.ylabel('Fitness')
-    plt.title('Mean and Standard Deviation of Fitness per Generation')
-    plt.legend()
+        # Plotting Mean Fitness and Standard Deviation
+        plt.subplot(3, 1, 3)
+        plt.plot(results["mean_fitness"], label='Mean Fitness', color='green')
+        plt.fill_between(range(generations),
+                         np.array(results["mean_fitness"]) - np.array(results["std_fitness"]),
+                         np.array(results["mean_fitness"]) + np.array(results["std_fitness"]),
+                         color='b', alpha=0.2, label='Std Dev')
+        plt.xlabel('Generation')
+        plt.ylabel('Fitness')
+        plt.title(f'Mean and Standard Deviation of Fitness per Generation ({title})')
+        plt.legend()
 
-    plt.tight_layout()
+        plt.tight_layout()
+        plot_path = os.path.join(os.getcwd(), f"{filename_base}_{filename_suffix}_plot.png")
+        plt.savefig(plot_path)
+        plt.close()
 
-    plot_path = os.path.join(os.getcwd(), f"{filename_base}_fitness_plot.png")
-    plt.savefig(plot_path)
-    plt.close()
+    # Plot average, best, and worst results
+    plot_results("Average", avg_results, "avg")
+    plot_results("Best", best_run, "best")
+    plot_results("Worst", worst_run, "worst")
 
     print(f"Selection Method: {args.selection_method}")
     print(f"Cross Method: {args.cross_method}")
     print(f"Mutation Method: {args.mutation_method}")
+    best_output_across_runs = min([min(run["best_output"]) for run in results_per_run])
 
+    print(f"Best Output Across All Runs: {best_output_across_runs:.4f}")
 if __name__ == "__main__":
     main()
