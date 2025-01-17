@@ -80,6 +80,8 @@ def main():
 
     def on_generation(ga_instance):
         best_solution, best_fitness, _ = ga_instance.best_solution()
+        if gene_type == "binary":
+            best_solution = decode_chromosome(best_solution)
         best_output = griewank_func(best_solution)
         best_output_per_generation.append(best_output)
         best_fitness_per_generation.append(best_fitness)
