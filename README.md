@@ -1,0 +1,1 @@
+This repository contains implementations of evolutionary computing algorithms developed as part of an academic project. The project was conducted in Python and focuses on solving optimization problems using evolutionary approaches.
